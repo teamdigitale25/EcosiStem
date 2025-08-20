@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glossario Interattivo</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        .popup-overlay {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+        }
+        .popup-content {
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        .term-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .term-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        .color-red { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .color-purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+        .color-blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .color-green { background: linear-gradient(135deg, #10b981, #059669); }
+        .color-orange { background: linear-gradient(135deg, #f97316, #ea580c); }
+        .color-yellow { background: linear-gradient(135deg, #eab308, #d97706); }
+        
+        .header-image-container {
+            width: 100%;
+            max-width: 1920px;
+            height: 300px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .header-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .upload-placeholder {
+            color: white;
+            text-align: center;
+            font-size: 18px;
+        }
+        
+        @media (max-width: 768px) {
+            .category-grid {
+                grid-template-columns: 1fr;
+            }
+            .header-image-container {
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header Section -->
+        <div class="mb-8">
+            <div class="header-image-container mb-6">
+                <img id="headerImage" class="header-image hidden" alt="Header">
+                <div id="headerPlaceholder" class="upload-placeholder">
+                    <i class="fas fa-image text-4xl mb-2"></i>
+                    <p>Carica immagine header (1920x1080px)</p>
+                    <input type="file" id="headerImageInput" class="hidden" accept=".jpg,.jpeg,.png">
+                    <button onclick="document.getElementById('headerImageInput').click()" 
+                            class="bg-white bg-opacity-20 px-4 py-2 rounded-lg mt-2 text-white hover:bg-opacity-30 transition">
+                        <i class="fas fa-upload mr-2"></i>Sfoglia
+                    </button>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <input id="mainTitle" type="text" placeholder="Inserisci il titolo del glossario" 
+                       class="text-4xl font-bold text-center bg-transparent border-b-2 border-gray-300 focus:border-blue-500 outline-none px-4 py-2 w-full max-w-2xl">
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="mb-8">
+            <div class="relative max-w-md mx-auto">
+                <input id="searchInput" type="text" placeholder="Cerca termini nel glossario..." 
+                       class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+            </div>
+        </div>
+
+        <!-- Category Buttons -->
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+            <button onclick="openCategory('red')" class="category-btn color-red text-white py-4 px-6 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300">
+                <input type="text" id="title-red" placeholder="Categoria" class="bg-transparent text-center text-white placeholder-white placeholder-opacity-70 w-full outline-none font-semibold">
+            </button>
+            <button onclick="openCategory('purple')" class="category-btn color-purple text-white py-4 px-6 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300">
+                <input type="text" id="title-purple" placeholder="Categoria" class="bg-transparent text-center text-white placeholder-white placeholder-opacity-70 w-full outline-none font-semibold">
+            </button>
+            <button onclick="openCategory('blue')" class="category-btn color-blue text-white py-4 px-6 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300">
+                <input type="text" id="title-blue" placeholder="Categoria" class="bg-transparent text-center text-white placeholder-white placeholder-opacity-70 w-full outline-none font-semibold">
+            </button>
+            <button onclick="openCategory('green')" class="category-btn color-green text-white py-4 px-6 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300">
+                <input type="text" id="title-green" placeholder="Categoria" class="bg-transparent text-center text-white placeholder-white placeholder-opacity-70 w-full outline-none font-semibold">
+            </button>
+            <button onclick="openCategory('orange')" class="category-btn color-orange text-white py-4 px-6 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300">
+                <input type="text" id="title-orange" placeholder="Categoria" class="bg-transparent text-center text-white placeholder-white placeholder-opacity-70 w-full outline-none font-semibold">
+            </button>
+            <button onclick="openCategory('yellow')" class="category-btn color-yellow text-white py-4 px-6 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300">
+                <input type="text" id="title-yellow" placeholder="Categoria" class="bg-transparent text-center text-white placeholder-white placeholder-opacity-70 w-full outline-none font-semibold">
+            </button>
+        </div>
+
+        <!-- Search Results -->
+        <div id="searchResults" class="hidden mb-8">
+            <h3 class="text-2xl font-bold mb-4">Risultati della ricerca:</h3>
+            <div id="searchResultsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </div>
+
+        <!-- Iframe Generator -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h3 class="text-xl font-bold mb-4"><i class="fas fa-code mr-2"></i>Codice di Incorporamento</h3>
+            <p class="text-gray-600 mb-4">Copia questo codice per incorporare il glossario nel tuo sito web:</p>
+            <div class="bg-gray-100 p-4 rounded-lg">
+                <code id="iframeCode" class="text-sm break-all"></code>
+            </div>
+            <button onclick="copyIframeCode()" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">
+                <i class="fas fa-copy mr-2"></i>Copia Codice
+            </button>
+        </div>
+    </div>
+
+    <!-- Category Modal -->
+    <div id="categoryModal" class="fixed inset-0 popup-overlay hidden z-50 flex items-center justify-center p-4">
+        <div class="popup-content bg-white rounded-2xl w-full max-w-6xl shadow-2xl">
+            <div class="flex justify-between items-center p-6 border-b">
+                <h2 id="modalTitle" class="text-2xl font-bold"></h2>
+                <button onclick="closeCategoryModal()" class="text-gray-500 hover:text-gray-700 text-2xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <div class="mb-6">
+                    <button onclick="openTermModal()" class="bg-green-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-600 transition">
+                        <i class="fas fa-plus mr-2"></i>Aggiungi Termine
+                    </button>
+                </div>
+                <div id="termsGrid" class="category-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Term Modal -->
+    <div id="termModal" class="fixed inset-0 popup-overlay hidden z-50 flex items-center justify-center p-4">
+        <div class="popup-content bg-white rounded-2xl w-full max-w-2xl shadow-2xl">
+            <div class="flex justify-between items-center p-6 border-b">
+                <h2 id="termModalTitle" class="text-2xl font-bold">Nuovo Termine</h2>
+                <button onclick="closeTermModal()" class="text-gray-500 hover:text-gray-700 text-2xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Titolo</label>
+                    <input id="termTitle" type="text" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Immagine</label>
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                        <img id="termImagePreview" class="hidden mx-auto mb-4 max-h-48 rounded-lg">
+                        <input type="file" id="termImageInput" class="hidden" accept=".jpg,.jpeg,.png">
+                        <button onclick="document.getElementById('termImageInput').click()" 
+                                class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">
+                            <i class="fas fa-upload mr-2"></i>Sfoglia/Carica
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Descrizione</label>
+                    <textarea id="termDescription" rows="6" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+                
+                <div class="flex justify-between">
+                    <button id="deleteTermBtn" onclick="deleteTerm()" class="bg-red-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-600 transition hidden">
+                        <i class="fas fa-trash mr-2"></i>Elimina
+                    </button>
+                    <div class="flex space-x-4 ml-auto">
+                        <button onclick="closeTermModal()" class="bg-gray-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-600 transition">
+                            Annulla
+                        </button>
+                        <button onclick="saveTerm()" class="bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-600 transition">
+                            <i class="fas fa-save mr-2"></i>Salva
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentCategory = '';
+        let currentTermIndex = -1;
+        let glossaryData = {
+            title: '',
+            headerImage: '',
+            categories: {
+                red: { title: '', terms: [] },
+                purple: { title: '', terms: [] },
+                blue: { title: '', terms: [] },
+                green: { title: '', terms: [] },
+                orange: { title: '', terms: [] },
+                yellow: { title: '', terms: [] }
+            }
+        };
+
+        // Load data on page load
+        window.onload = function() {
+            loadData();
+            generateIframeCode();
+            setupEventListeners();
+        };
+
+        function setupEventListeners() {
+            // Main title change
+            document.getElementById('mainTitle').addEventListener('input', function() {
+                glossaryData.title = this.value;
+                saveData();
+            });
+
+            // Category titles change
+            ['red', 'purple', 'blue', 'green', 'orange', 'yellow'].forEach(color => {
+                document.getElementById(`title-${color}`).addEventListener('input', function() {
+                    glossaryData.categories[color].title = this.value;
+                    saveData();
+                });
+            });
+
+            // Header image upload
+            document.getElementById('headerImageInput').addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        glossaryData.headerImage = e.target.result;
+                        document.getElementById('headerImage').src = e.target.result;
+                        document.getElementById('headerImage').classList.remove('hidden');
+                        document.getElementById('headerPlaceholder').classList.add('hidden');
+                        saveData();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Term image upload
+            document.getElementById('termImageInput').addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('termImagePreview').src = e.target.result;
+                        document.getElementById('termImagePreview').classList.remove('hidden');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Search functionality
+            document.getElementById('searchInput').addEventListener('input', function() {
+                performSearch(this.value);
+            });
+        }
+
+        function openCategory(color) {
+            currentCategory = color;
+            const category = glossaryData.categories[color];
+            document.getElementById('modalTitle').textContent = category.title || `Categoria ${color.charAt(0).toUpperCase() + color.slice(1)}`;
+            renderTermsGrid();
+            document.getElementById('categoryModal').classList.remove('hidden');
+        }
+
+        function closeCategoryModal() {
+            document.getElementById('categoryModal').classList.add('hidden');
+        }
+
+        function openTermModal(termIndex = -1) {
+            currentTermIndex = termIndex;
+            const isEdit = termIndex >= 0;
+            
+            document.getElementById('termModalTitle').textContent = isEdit ? 'Modifica Termine' : 'Nuovo Termine';
+            document.getElementById('deleteTermBtn').classList.toggle('hidden', !isEdit);
+            
+            if (isEdit) {
+                const term = glossaryData.categories[currentCategory].terms[termIndex];
+                document.getElementById('termTitle').value = term.title;
+                document.getElementById('termDescription').value = term.description;
+                if (term.image) {
+                    document.getElementById('termImagePreview').src = term.image;
+                    document.getElementById('termImagePreview').classList.remove('hidden');
+                }
+            } else {
+                document.getElementById('termTitle').value = '';
+                document.getElementById('termDescription').value = '';
+                document.getElementById('termImagePreview').classList.add('hidden');
+            }
+            
+            document.getElementById('termModal').classList.remove('hidden');
+        }
+
+        function closeTermModal() {
+            document.getElementById('termModal').classList.add('hidden');
+            document.getElementById('termImagePreview').classList.add('hidden');
+        }
+
+        function saveTerm() {
+            const title = document.getElementById('termTitle').value;
+            const description = document.getElementById('termDescription').value;
+            const imageElement = document.getElementById('termImagePreview');
+            const image = imageElement.classList.contains('hidden') ? '' : imageElement.src;
+            
+            if (!title.trim()) {
+                alert('Il titolo è obbligatorio');
+                return;
+            }
+            
+            const term = { title, description, image };
+            
+            if (currentTermIndex >= 0) {
+                glossaryData.categories[currentCategory].terms[currentTermIndex] = term;
+            } else {
+                glossaryData.categories[currentCategory].terms.push(term);
+            }
+            
+            saveData();
+            renderTermsGrid();
+            closeTermModal();
+        }
+
+        function deleteTerm() {
+            if (confirm('Sei sicuro di voler eliminare questo termine?')) {
+                glossaryData.categories[currentCategory].terms.splice(currentTermIndex, 1);
+                saveData();
+                renderTermsGrid();
+                closeTermModal();
+            }
+        }
+
+        function renderTermsGrid() {
+            const grid = document.getElementById('termsGrid');
+            const terms = glossaryData.categories[currentCategory].terms;
+            
+            grid.innerHTML = '';
+            
+            terms.forEach((term, index) => {
+                const termCard = document.createElement('div');
+                termCard.className = 'term-card bg-white rounded-xl p-4 shadow-lg border border-gray-200';
+                termCard.onclick = () => openTermModal(index);
+                
+                termCard.innerHTML = `
+                    <div class="aspect-w-16 aspect-h-9 mb-3">
+                        <img src="${term.image || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk0YTNiOCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltbWFnaW5lPC90ZXh0Pjwvc3ZnPg=='}" 
+                             alt="${term.title}" class="w-full h-24 object-cover rounded-lg">
+                    </div>
+                    <h4 class="font-bold text-lg mb-2 text-gray-800">${term.title}</h4>
+                    <p class="text-gray-600 text-sm line-clamp-3">${term.description}</p>
+                `;
+                
+                grid.appendChild(termCard);
+            });
+        }
+
+        function performSearch(query) {
+            const searchResults = document.getElementById('searchResults');
+            const searchResultsContainer = document.getElementById('searchResultsContainer');
+            
+            if (!query.trim()) {
+                searchResults.classList.add('hidden');
+                return;
+            }
+            
+            const results = [];
+            Object.keys(glossaryData.categories).forEach(categoryKey => {
+                const category = glossaryData.categories[categoryKey];
+                category.terms.forEach(term => {
+                    if (term.title.toLowerCase().includes(query.toLowerCase()) || 
+                        term.description.toLowerCase().includes(query.toLowerCase())) {
+                        results.push({
+                            ...term,
+                            category: category.title || categoryKey,
+                            categoryColor: categoryKey
+                        });
+                    }
+                });
+            });
+            
+            searchResultsContainer.innerHTML = '';
+            results.forEach(result => {
+                const resultCard = document.createElement('div');
+                resultCard.className = 'bg-white rounded-xl p-4 shadow-lg border border-gray-200';
+                
+                resultCard.innerHTML = `
+                    <div class="flex items-center mb-2">
+                        <span class="color-${result.categoryColor} text-white px-2 py-1 rounded-full text-xs font-semibold mr-2">
+                            ${result.category}
+                        </span>
+                    </div>
+                    <div class="aspect-w-16 aspect-h-9 mb-3">
+                        <img src="${result.image || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk0YTNiOCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltbWFnaW5lPC90ZXh0Pjwvc3ZnPg=='}" 
+                             alt="${result.title}" class="w-full h-24 object-cover rounded-lg">
+                    </div>
+                    <h4 class="font-bold text-lg mb-2 text-gray-800">${result.title}</h4>
+                    <p class="text-gray-600 text-sm">${result.description}</p>
+                `;
+                
+                searchResultsContainer.appendChild(resultCard);
+            });
+            
+            searchResults.classList.remove('hidden');
+        }
+
+        function saveData() {
+            localStorage.setItem('glossaryData', JSON.stringify(glossaryData));
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem('glossaryData');
+            if (saved) {
+                glossaryData = JSON.parse(saved);
+                
+                // Load main title
+                if (glossaryData.title) {
+                    document.getElementById('mainTitle').value = glossaryData.title;
+                }
+                
+                // Load header image
+                if (glossaryData.headerImage) {
+                    document.getElementById('headerImage').src = glossaryData.headerImage;
+                    document.getElementById('headerImage').classList.remove('hidden');
+                    document.getElementById('headerPlaceholder').classList.add('hidden');
+                }
+                
+                // Load category titles
+                Object.keys(glossaryData.categories).forEach(color => {
+                    if (glossaryData.categories[color].title) {
+                        document.getElementById(`title-${color}`).value = glossaryData.categories[color].title;
+                    }
+                });
+            }
+        }
+
+        function generateIframeCode() {
+            const currentUrl = window.location.href;
+            const iframeCode = `<iframe src="${currentUrl}" width="100%" height="800" frameborder="0" scrolling="yes"></iframe>`;
+            document.getElementById('iframeCode').textContent = iframeCode;
+        }
+
+        function copyIframeCode() {
+            const code = document.getElementById('iframeCode').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('Codice copiato negli appunti!');
+            });
+        }
+    </script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon='{"rayId":"972258d0da0bee85","serverTiming":{"name":{"cfExtPri":true,"cfEdge":true,"cfOrigin":true,"cfL4":true,"cfSpeedBrain":true,"cfCacheStatus":true}},"version":"2025.8.0","token":"4edd5f8ec12a48cfa682ab8261b80a79"}' crossorigin="anonymous"></script>
+</body>
+</html>
+    <script id="html_badge_script1">
+        window.__genspark_remove_badge_link = "https://www.genspark.ai/api/html_badge/" +
+            "remove_badge?token=To%2FBnjzloZ3UfQdcSaYfDnlO3HKMaOMS5wPFBIo0zVremeZNXMVmoK5H91EX3ZGr8PK3WbUeDjAn1fL%2B2hMbL2DVHM41fA9nxb9lgNgriKjnUgFGE%2FSd8g5Dr4wu%2BGO%2BIowpwhaMRoZcgChALPFr7iz8fntQor9DHa2ICOhf5NwOopJ7MO%2BRSaMOqHdEtjjPe9oPZzhBrDMC11niPZippDXvqEbLHTsCr8HTVbq%2Fiv98850leg9bCeM%2F%2B8aoNbF1mcdNCwBdfmp%2F7MZ32qD8HZRuCl%2BfuYVbwI%2FVViPNDq7fWOQZspfVJ7cn3JPy1JAP2b6SsKA8Z67FT6myc9WGTtfP1ePDW44rrzTUt0ecIi%2ByiBjXl7lPcd65gxT6PxW8uckvt%2FzUFO83LiKgV1SugUy913fuphvb1gEcp49p21cAD4R%2BpMoEJJZwp1OEocQ%2BfupaffT2MjkBziErYwae0nNuDpkNxgAP00hBzHcG1SmjFFj3PCRFVzy4Hz7ihW2uXb0WgQ3KAa%2B1qz39U%2BOMhg%3D%3D";
+        window.__genspark_locale = "it-IT";
+        window.__genspark_token = "To/BnjzloZ3UfQdcSaYfDnlO3HKMaOMS5wPFBIo0zVremeZNXMVmoK5H91EX3ZGr8PK3WbUeDjAn1fL+2hMbL2DVHM41fA9nxb9lgNgriKjnUgFGE/Sd8g5Dr4wu+GO+IowpwhaMRoZcgChALPFr7iz8fntQor9DHa2ICOhf5NwOopJ7MO+RSaMOqHdEtjjPe9oPZzhBrDMC11niPZippDXvqEbLHTsCr8HTVbq/iv98850leg9bCeM/+8aoNbF1mcdNCwBdfmp/7MZ32qD8HZRuCl+fuYVbwI/VViPNDq7fWOQZspfVJ7cn3JPy1JAP2b6SsKA8Z67FT6myc9WGTtfP1ePDW44rrzTUt0ecIi+yiBjXl7lPcd65gxT6PxW8uckvt/zUFO83LiKgV1SugUy913fuphvb1gEcp49p21cAD4R+pMoEJJZwp1OEocQ+fupaffT2MjkBziErYwae0nNuDpkNxgAP00hBzHcG1SmjFFj3PCRFVzy4Hz7ihW2uXb0WgQ3KAa+1qz39U+OMhg==";
+    </script>
+    
+        <script id="html_badge_script2" src="https://www.genspark.ai/html_badge.js"></script>
+        
+    <script id="html_notice_dialog_script" src="https://www.genspark.ai/notice_dialog.js"></script>
+    
